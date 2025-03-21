@@ -151,11 +151,45 @@ function addEvent(e) {
     // Save updated schedule
     localStorage.setItem(`schedule_${user.id}`, JSON.stringify(schedule));
 
+    // Create notification for new event
+    if (typeof Notifications !== 'undefined') {
+        Notifications.addNotification(
+            `New event added: ${title} on ${formatDate(startDate.toLocaleDateString())}`,
+            'schedule-update',
+            { eventId: newEvent.id }
+        );
+
+        // Notify friends about your updated schedule
+        notifyFriendsAboutScheduleUpdate(user.id, title);
+    }
+
     // Reset form
     scheduleForm.reset();
 
     // Reload events
     loadEvents();
+}
+
+// Notify friends about a schedule update
+function notifyFriendsAboutScheduleUpdate(userId, eventTitle) {
+    // This is a simplified version - in a real app, you'd likely use a server
+    // to push notifications to friends
+
+    // Get friends who might be interested
+    const friends = JSON.parse(localStorage.getItem(`friends_${userId}`) || '[]');
+    const confirmedFriends = friends.filter(friend => friend.status === 'confirmed');
+
+    // For demonstration, we'll update their notifications directly
+    // In a real app with server, the server would handle this
+    confirmedFriends.forEach(friend => {
+        const friendUser = getCurrentUser();
+
+        // Create notification data for this user's schedule update
+        if (typeof Notifications !== 'undefined' && friend.id !== friendUser.id) {
+            // In a real system, this would be pushed to friends via server
+            console.log(`Schedule update notification would be sent to ${friend.name}`);
+        }
+    });
 }
 
 // Load events from storage and display them
@@ -244,6 +278,10 @@ function deleteEvent(eventId, parentId) {
     const user = getCurrentUser();
     let schedule = getSchedule(user.id);
 
+    // Find event before deletion for notification
+    const eventToDelete = schedule.find(event => event.id === eventId);
+    const eventTitle = eventToDelete ? eventToDelete.title : 'Event';
+
     if (parentId) {
         // If this is a recurrence, ask if user wants to delete all recurrences
         if (confirm('Delete all occurrences of this event?')) {
@@ -269,8 +307,42 @@ function deleteEvent(eventId, parentId) {
     // Save updated schedule
     localStorage.setItem(`schedule_${user.id}`, JSON.stringify(schedule));
 
+    // Notification for event deletion
+    if (typeof Notifications !== 'undefined') {
+        Notifications.addNotification(
+            `Event "${eventTitle}" has been deleted from your schedule`,
+            'schedule-update'
+        );
+    }
+
     // Reload events
     loadEvents();
+}
+
+// Show a specific event (called from notifications)
+function showEvent(eventId) {
+    // First switch to the schedule tab
+    const scheduleTab = document.querySelector('.sidebar-menu a[href="#schedule"]');
+    if (scheduleTab) {
+        scheduleTab.click();
+    }
+
+    // Wait for DOM to update
+    setTimeout(() => {
+        // If a specific event ID is provided, scroll to that event
+        if (eventId) {
+            const eventItem = document.querySelector(`.event-item[data-id="${eventId}"]`);
+            if (eventItem) {
+                eventItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                eventItem.classList.add('highlight');
+
+                // Remove highlight after animation
+                setTimeout(() => {
+                    eventItem.classList.remove('highlight');
+                }, 2000);
+            }
+        }
+    }, 100);
 }
 
 // Get schedule for a user
@@ -312,4 +384,4 @@ function generateEventId() {
 }
 
 // Export functions
-export { initSchedule, getSchedule };
+export { initSchedule, getSchedule, showEvent };

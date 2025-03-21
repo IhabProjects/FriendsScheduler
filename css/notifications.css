@@ -1,0 +1,275 @@
+/**
+ * Notifications.css
+ * Styles for the notification system of the Friends Scheduler application
+ */
+
+/* Notification Container */
+.notification-container {
+    position: relative;
+    display: inline-block;
+    margin-left: 15px;
+    z-index: 1000;
+}
+
+/* Notification Toggle Button */
+.notification-toggle {
+    background: none;
+    border: none;
+    color: #333;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px;
+    position: relative;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.notification-toggle:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.notification-toggle.has-notifications {
+    color: #2c6ecf;
+    animation: pulse 2s infinite;
+}
+
+/* Notification Counter */
+.notification-counter {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 2px;
+}
+
+.notification-counter.hidden {
+    display: none;
+}
+
+/* Notification List */
+.notification-list {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-top: 8px;
+    padding: 8px 0;
+    z-index: 1001;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.notification-list.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+/* Empty Notification Message */
+.empty-notification {
+    padding: 20px;
+    text-align: center;
+    color: #999;
+    font-style: italic;
+}
+
+/* Notification Item */
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item:hover {
+    background-color: #f9f9f9;
+}
+
+.notification-item.read {
+    opacity: 0.7;
+}
+
+.notification-item.unread {
+    background-color: #f0f7ff;
+}
+
+.notification-item.unread:hover {
+    background-color: #e8f4ff;
+}
+
+/* Notification Icon */
+.notification-icon {
+    margin-right: 12px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: #e1e9f6;
+    color: #2c6ecf;
+    flex-shrink: 0;
+}
+
+/* Notification Content */
+.notification-content {
+    flex: 1;
+}
+
+.notification-content p {
+    margin: 0 0 4px 0;
+    font-size: 0.9rem;
+    color: #333;
+    line-height: 1.4;
+}
+
+.notification-time {
+    font-size: 0.75rem;
+    color: #999;
+}
+
+/* Notification Actions */
+.notification-actions {
+    display: flex;
+    align-items: center;
+    margin-left: 8px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.notification-item:hover .notification-actions {
+    opacity: 1;
+}
+
+.notification-actions button {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    margin-left: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.notification-actions button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #333;
+}
+
+.notification-actions .mark-read:hover {
+    color: #2c6ecf;
+}
+
+.notification-actions .delete-notification:hover {
+    color: #e74c3c;
+}
+
+/* Notification Alert (Popup) */
+.notification-alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 300px;
+    background-color: white;
+    border-left: 4px solid #2c6ecf;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    z-index: 2000;
+    animation: slideIn 0.3s forwards;
+}
+
+.notification-alert .alert-icon {
+    margin-right: 12px;
+    color: #2c6ecf;
+    flex-shrink: 0;
+}
+
+.notification-alert .alert-content {
+    flex: 1;
+}
+
+.notification-alert .alert-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.notification-alert .alert-close {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 4px;
+    margin-left: 8px;
+    transition: color 0.2s ease;
+}
+
+.notification-alert .alert-close:hover {
+    color: #333;
+}
+
+/* Animation for alert */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Animation for notification bell */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .notification-list {
+        width: 280px;
+        right: -70px;
+    }
+
+    .notification-list::before {
+        right: 78px;
+    }
+
+    .notification-alert {
+        width: calc(100% - 40px);
+    }
+}

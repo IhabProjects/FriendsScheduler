@@ -42,6 +42,26 @@ function updateAuthUI() {
         initGroups();
         initSchedule();
 
+        // Initialize notifications after authentication (make sure it's available)
+        if (typeof Notifications !== 'undefined') {
+            // Add a welcome back notification
+            Notifications.addNotification(
+                `Welcome back, ${user.name}!`,
+                'general'
+            );
+
+            // Example: Add a simulated friend request notification after 5 seconds
+            setTimeout(() => {
+                if (isAuthenticated()) {
+                    Notifications.addNotification(
+                        'You have a new friend request from Jane Smith',
+                        'friend-request',
+                        { userId: 'jane123' }
+                    );
+                }
+            }, 5000);
+        }
+
         // Update navigation
         updateNavigation();
     } else {
@@ -118,15 +138,56 @@ function updateNavigation() {
 
 // Logout function
 function logout() {
+    // Add a notification about logging out if Notifications module is loaded
+    if (typeof Notifications !== 'undefined') {
+        // This notification will show briefly before logout completes
+        Notifications.addNotification(
+            'You have been logged out successfully',
+            'general'
+        );
+    }
+
     // Clear user data from localStorage
     localStorage.removeItem('user');
     localStorage.removeItem('friends');
     localStorage.removeItem('groups');
     localStorage.removeItem('schedule');
+    localStorage.removeItem('friendScheduler_notifications');
 
     // Update UI
     updateAuthUI();
 }
 
+// Function to create a test notification (for demonstration)
+function createTestNotification(type) {
+    if (typeof Notifications === 'undefined') return;
+
+    let message, actionData;
+
+    switch(type) {
+        case 'friend-request':
+            message = 'New friend request from John Doe';
+            actionData = { userId: 'user123' };
+            break;
+        case 'schedule-update':
+            message = 'Alex updated their schedule for next week';
+            actionData = { eventId: 'event789' };
+            break;
+        case 'reminder':
+            message = 'Reminder: Study group tomorrow at 3 PM';
+            actionData = { date: new Date(Date.now() + 86400000).toISOString() };
+            break;
+        case 'group':
+            message = 'You were added to "Computer Science Study Group"';
+            actionData = { groupId: 'group456' };
+            break;
+        default:
+            message = 'New notification';
+            actionData = null;
+    }
+
+    return Notifications.addNotification(message, type, actionData);
+}
+
 // Export functions for use in other modules
-export { updateAuthUI };
+export { updateAuthUI, createTestNotification };

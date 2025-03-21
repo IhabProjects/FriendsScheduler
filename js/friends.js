@@ -307,6 +307,14 @@ function sendFriendRequest(user) {
     // Save updated friends list for recipient
     localStorage.setItem(`friends_${user.id}`, JSON.stringify(recipientFriends));
 
+    // Create a notification for the request sent
+    if (typeof Notifications !== 'undefined') {
+        Notifications.addNotification(
+            `Friend request sent to ${user.name}`,
+            'friend-request'
+        );
+    }
+
     // Update UI
     searchUsers();
 }
@@ -318,10 +326,12 @@ function acceptFriendRequest(friendId) {
     // Update in current user's friends list
     const friends = getFriends();
     const friendIndex = friends.findIndex(friend => friend.id === friendId);
+    let friendName = '';
 
     if (friendIndex !== -1) {
         friends[friendIndex].status = 'confirmed';
         friends[friendIndex].direction = 'none';
+        friendName = friends[friendIndex].name;
 
         // Save updated friends list
         localStorage.setItem(`friends_${currentUser.id}`, JSON.stringify(friends));
@@ -339,6 +349,15 @@ function acceptFriendRequest(friendId) {
         localStorage.setItem(`friends_${friendId}`, JSON.stringify(friendsFriends));
     }
 
+    // Create a notification for the accepted request
+    if (typeof Notifications !== 'undefined' && friendName) {
+        Notifications.addNotification(
+            `You are now friends with ${friendName}`,
+            'friend-request',
+            { userId: friendId }
+        );
+    }
+
     // Update UI
     loadFriends();
     loadFriendRequests();
@@ -349,12 +368,16 @@ function acceptFriendRequest(friendId) {
 function rejectFriendRequest(friendId) {
     const currentUser = getCurrentUser();
 
+    // Find friend name before removing
+    const friends = getFriends();
+    const friend = friends.find(f => f.id === friendId);
+    const friendName = friend ? friend.name : '';
+
     // Remove from current user's friends list
-    let friends = getFriends();
-    friends = friends.filter(friend => friend.id !== friendId);
+    let updatedFriends = friends.filter(friend => friend.id !== friendId);
 
     // Save updated friends list
-    localStorage.setItem(`friends_${currentUser.id}`, JSON.stringify(friends));
+    localStorage.setItem(`friends_${currentUser.id}`, JSON.stringify(updatedFriends));
 
     // Remove from friend's list
     let friendsFriends = JSON.parse(localStorage.getItem(`friends_${friendId}`) || '[]');
@@ -362,6 +385,14 @@ function rejectFriendRequest(friendId) {
 
     // Save updated friends list
     localStorage.setItem(`friends_${friendId}`, JSON.stringify(friendsFriends));
+
+    // Create a notification for the rejected request
+    if (typeof Notifications !== 'undefined' && friendName) {
+        Notifications.addNotification(
+            `You rejected a friend request from ${friendName}`,
+            'friend-request'
+        );
+    }
 
     // Update UI
     loadFriendRequests();
@@ -376,12 +407,16 @@ function removeFriend(friendId) {
 
     const currentUser = getCurrentUser();
 
+    // Find friend name before removing
+    const friends = getFriends();
+    const friend = friends.find(f => f.id === friendId);
+    const friendName = friend ? friend.name : '';
+
     // Remove from current user's friends list
-    let friends = getFriends();
-    friends = friends.filter(friend => friend.id !== friendId);
+    let updatedFriends = friends.filter(friend => friend.id !== friendId);
 
     // Save updated friends list
-    localStorage.setItem(`friends_${currentUser.id}`, JSON.stringify(friends));
+    localStorage.setItem(`friends_${currentUser.id}`, JSON.stringify(updatedFriends));
 
     // Remove from friend's list
     let friendsFriends = JSON.parse(localStorage.getItem(`friends_${friendId}`) || '[]');
@@ -389,6 +424,14 @@ function removeFriend(friendId) {
 
     // Save updated friends list
     localStorage.setItem(`friends_${friendId}`, JSON.stringify(friendsFriends));
+
+    // Create a notification for the removed friend
+    if (typeof Notifications !== 'undefined' && friendName) {
+        Notifications.addNotification(
+            `You removed ${friendName} from your friends`,
+            'friend-request'
+        );
+    }
 
     // Update UI
     loadFriends();
@@ -398,6 +441,32 @@ function removeFriend(friendId) {
 function getFriends() {
     const currentUser = getCurrentUser();
     return JSON.parse(localStorage.getItem(`friends_${currentUser.id}`) || '[]');
+}
+
+// Show friend requests tab and highlight a specific request
+function showFriendRequests(userId = null) {
+    // First switch to the friends tab
+    const friendsTab = document.querySelector('.sidebar-menu a[href="#friends"]');
+    if (friendsTab) {
+        friendsTab.click();
+    }
+
+    // Wait for DOM to update
+    setTimeout(() => {
+        // If a specific user ID is provided, scroll to that request
+        if (userId) {
+            const requestItem = document.querySelector(`.request-item[data-id="${userId}"]`);
+            if (requestItem) {
+                requestItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                requestItem.classList.add('highlight');
+
+                // Remove highlight after animation
+                setTimeout(() => {
+                    requestItem.classList.remove('highlight');
+                }, 2000);
+            }
+        }
+    }, 100);
 }
 
 // Debounce function to limit function calls
@@ -412,4 +481,4 @@ function debounce(func, delay) {
 }
 
 // Export functions
-export { initFriends, getFriends };
+export { initFriends, getFriends, showFriendRequests };

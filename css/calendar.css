@@ -134,6 +134,28 @@
     background-color: #c6e6d3;
 }
 
+/* Highlighted cell */
+.calendar-cell.highlight-cell {
+    animation: cell-highlight 3s ease-in-out;
+    position: relative;
+    z-index: 2;
+}
+
+@keyframes cell-highlight {
+    0% {
+        background-color: rgba(255, 193, 7, 0.3);
+        box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.8);
+    }
+    50% {
+        background-color: rgba(255, 193, 7, 0.5);
+        box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.6);
+    }
+    100% {
+        background-color: initial;
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+    }
+}
+
 /* Responsive calendar */
 @media (max-width: 768px) {
     .calendar-grid {

@@ -195,11 +195,41 @@ function createGroup(e) {
     // Save updated groups
     localStorage.setItem(`groups_${currentUser.id}`, JSON.stringify(groups));
 
+    // Create notification for new group
+    if (typeof Notifications !== 'undefined') {
+        Notifications.addNotification(
+            `New group created: ${groupName}`,
+            'group',
+            { groupId: newGroup.id }
+        );
+
+        // Notify group members (in a real app, this would be server-side)
+        notifyGroupMembers(newGroup, 'added');
+    }
+
     // Reset form
     createGroupForm.reset();
 
     // Reload groups
     loadGroups();
+}
+
+// Notify group members about changes
+function notifyGroupMembers(group, action) {
+    // In a real app this would be handled by a server
+    // This is a simplified version for demonstration
+
+    const currentUser = getCurrentUser();
+
+    // Skip the current user (group creator/admin)
+    const otherMembers = group.members.filter(member =>
+        member.id !== currentUser.id && member.role !== 'admin'
+    );
+
+    // For demonstration purposes, log notification that would be sent
+    otherMembers.forEach(member => {
+        console.log(`Group notification would be sent to member ${member.id}`);
+    });
 }
 
 // View group's common calendar
@@ -299,8 +329,18 @@ function updateGroup(groupId, newName, selectedFriends) {
         return;
     }
 
+    const oldName = groups[groupIndex].name;
+    const nameChanged = oldName !== newName;
+
     // Update group name
     groups[groupIndex].name = newName;
+
+    // Track added and removed members for notifications
+    const currentMemberIds = groups[groupIndex].members.map(m => m.id);
+    const addedMemberIds = selectedFriends.filter(id => !currentMemberIds.includes(id));
+    const removedMemberIds = currentMemberIds.filter(id =>
+        !selectedFriends.includes(id) && id !== currentUser.id
+    );
 
     // Update members (keeping admin as is)
     const adminMembers = groups[groupIndex].members.filter(member => member.role === 'admin');
@@ -315,6 +355,40 @@ function updateGroup(groupId, newName, selectedFriends) {
     // Save updated groups
     localStorage.setItem(`groups_${currentUser.id}`, JSON.stringify(groups));
 
+    // Create notifications for group updates
+    if (typeof Notifications !== 'undefined') {
+        // Notification for name change
+        if (nameChanged) {
+            Notifications.addNotification(
+                `Group renamed: ${oldName} → ${newName}`,
+                'group',
+                { groupId }
+            );
+        }
+
+        // Notification for member changes
+        if (addedMemberIds.length > 0 || removedMemberIds.length > 0) {
+            const memberChangeMsg = [];
+
+            if (addedMemberIds.length > 0) {
+                memberChangeMsg.push(`Added ${addedMemberIds.length} member${addedMemberIds.length > 1 ? 's' : ''}`);
+            }
+
+            if (removedMemberIds.length > 0) {
+                memberChangeMsg.push(`Removed ${removedMemberIds.length} member${removedMemberIds.length > 1 ? 's' : ''}`);
+            }
+
+            Notifications.addNotification(
+                `Group "${newName}" updated: ${memberChangeMsg.join(', ')}`,
+                'group',
+                { groupId }
+            );
+        }
+
+        // Notify members about the updates
+        notifyGroupMembers(groups[groupIndex], 'updated');
+    }
+
     // Reload groups
     loadGroups();
 }
@@ -327,12 +401,37 @@ function deleteGroup(groupId) {
 
     const currentUser = getCurrentUser();
 
+    // Get group before deletion
+    const groups = getGroups();
+    const group = groups.find(g => g.id === groupId);
+
+    if (!group) return;
+
+    const groupName = group.name;
+
+    // Store member info for notifications
+    const memberIds = group.members
+        .filter(m => m.id !== currentUser.id)
+        .map(m => m.id);
+
     // Remove from groups array
-    let groups = getGroups();
-    groups = groups.filter(group => group.id !== groupId);
+    const updatedGroups = groups.filter(group => group.id !== groupId);
 
     // Save updated groups
-    localStorage.setItem(`groups_${currentUser.id}`, JSON.stringify(groups));
+    localStorage.setItem(`groups_${currentUser.id}`, JSON.stringify(updatedGroups));
+
+    // Create notification for deleted group
+    if (typeof Notifications !== 'undefined') {
+        Notifications.addNotification(
+            `Group deleted: ${groupName}`,
+            'group'
+        );
+
+        // In a real app, members would be notified about the group deletion
+        memberIds.forEach(memberId => {
+            console.log(`Member ${memberId} would be notified about group deletion`);
+        });
+    }
 
     // If active group is being deleted, clear it
     clearActiveGroup();

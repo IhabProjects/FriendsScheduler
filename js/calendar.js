@@ -312,5 +312,69 @@ function clearActiveGroup() {
     renderCalendar();
 }
 
+// Navigate to a specific date (used by notifications)
+function navigateToDate(dateString) {
+    // First switch to the calendar view
+    const calendarTab = document.querySelector('.sidebar-menu a[href="#calendar"]');
+    if (calendarTab) {
+        calendarTab.click();
+    }
+
+    // Convert date string to Date object
+    const targetDate = new Date(dateString);
+    if (isNaN(targetDate.getTime())) {
+        console.error('Invalid date provided:', dateString);
+        return;
+    }
+
+    // Set current week to the week containing the target date
+    const day = targetDate.getDay(); // 0 = Sunday, 6 = Saturday
+    const startDate = new Date(targetDate);
+    startDate.setDate(targetDate.getDate() - day); // Get Sunday of the target week
+
+    currentWeek = startDate;
+
+    // Render the updated calendar
+    renderCalendar();
+
+    // Highlight the specific date cell
+    setTimeout(() => {
+        highlightDateCell(targetDate);
+    }, 100);
+}
+
+// Highlight a specific date cell
+function highlightDateCell(date) {
+    // Get day of week (0-6) and hour (to find the right cell)
+    const dayOfWeek = date.getDay();
+    const hour = date.getHours();
+
+    // Only proceed if hour is within our calendar range (8 AM to 10 PM)
+    if (hour >= 8 && hour <= 22) {
+        // Find the cell: row is determined by hour, column by day of week
+        // +1 because we have a time label column first
+        const columnIndex = dayOfWeek + 1;
+        const rowIndex = hour - 8 + 1; // +1 for header row
+
+        // Get all calendar cells
+        const cells = document.querySelectorAll('.calendar-cell');
+
+        // Calculate cell index
+        // There are 7 days in each row, and 1 time label column
+        const cellIndex = (rowIndex * 8) + columnIndex;
+
+        // Make sure the cell exists and highlight it
+        if (cells[cellIndex]) {
+            cells[cellIndex].classList.add('highlight-cell');
+            cells[cellIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Remove highlight class after animation
+            setTimeout(() => {
+                cells[cellIndex].classList.remove('highlight-cell');
+            }, 3000);
+        }
+    }
+}
+
 // Export functions
-export { initCalendar, setActiveGroup, clearActiveGroup };
+export { initCalendar, setActiveGroup, clearActiveGroup, navigateToDate };
