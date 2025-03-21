@@ -1,0 +1,158 @@
+/* Calendar specific styles */
+.calendar-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.calendar-container {
+    background-color: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    border-top: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
+}
+
+.calendar-header {
+    display: contents;
+}
+
+.header-cell {
+    padding: 10px;
+    text-align: center;
+    font-weight: 500;
+    background-color: var(--light-bg);
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.time-label {
+    padding: 10px;
+    text-align: right;
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 12px;
+    color: var(--light-text);
+}
+
+.calendar-cell {
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    min-height: 40px;
+}
+
+/* Different states for calendar cells */
+.calendar-cell.available {
+    background-color: #ebf7f0;
+}
+
+.calendar-cell.busy {
+    background-color: #f8e5e5;
+}
+
+.calendar-cell.common-free {
+    background-color: #c6e6d3;
+}
+
+/* For hover interaction */
+.calendar-cell.available:hover,
+.calendar-cell.common-free:hover {
+    background-color: #a8d5b9;
+    cursor: pointer;
+}
+
+/* Event item styling */
+.event-item {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 3px;
+    padding: 2px 5px;
+    margin: 2px;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Group colors for highlighting */
+.group-color-1 {
+    background-color: rgba(74, 111, 165, 0.2);
+}
+
+.group-color-2 {
+    background-color: rgba(255, 127, 80, 0.2);
+}
+
+.group-color-3 {
+    background-color: rgba(102, 187, 106, 0.2);
+}
+
+.group-color-4 {
+    background-color: rgba(156, 39, 176, 0.2);
+}
+
+.group-color-5 {
+    background-color: rgba(255, 193, 7, 0.2);
+}
+
+/* Legend for calendar */
+.calendar-legend {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+}
+
+.legend-color {
+    width: 15px;
+    height: 15px;
+    margin-right: 5px;
+    border-radius: 3px;
+}
+
+.legend-available .legend-color {
+    background-color: #ebf7f0;
+}
+
+.legend-busy .legend-color {
+    background-color: #f8e5e5;
+}
+
+.legend-common-free .legend-color {
+    background-color: #c6e6d3;
+}
+
+/* Responsive calendar */
+@media (max-width: 768px) {
+    .calendar-grid {
+        grid-template-columns: 60px repeat(7, 1fr);
+        font-size: 12px;
+    }
+
+    .time-label {
+        padding: 5px;
+    }
+
+    .header-cell {
+        padding: 5px;
+    }
+}
+
+@media (max-width: 576px) {
+    .calendar-grid {
+        grid-template-columns: 40px repeat(7, 1fr);
+        font-size: 10px;
+    }
+}

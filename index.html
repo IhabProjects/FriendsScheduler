@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friends Scheduler</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/calendar.css">
+    <link rel="stylesheet" href="css/friends.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <h1>Friends Scheduler</h1>
+            </div>
+            <nav id="main-nav">
+                <!-- Navigation will be dynamically populated based on auth status -->
+            </nav>
+        </header>
+
+        <main>
+            <!-- Authentication screens -->
+            <section id="auth-section" class="screen active">
+                <div class="auth-container">
+                    <div class="auth-form-container">
+                        <div class="tab-headers">
+                            <button class="tab-btn active" data-target="login-form">Login</button>
+                            <button class="tab-btn" data-target="register-form">Register</button>
+                        </div>
+
+                        <form id="login-form" class="auth-form active">
+                            <div class="form-group">
+                                <label for="login-email">Email</label>
+                                <input type="email" id="login-email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="login-password">Password</label>
+                                <input type="password" id="login-password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </form>
+
+                        <form id="register-form" class="auth-form">
+                            <div class="form-group">
+                                <label for="register-name">Full Name</label>
+                                <input type="text" id="register-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-email">Email</label>
+                                <input type="email" id="register-email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-password">Password</label>
+                                <input type="password" id="register-password" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-confirm-password">Confirm Password</label>
+                                <input type="password" id="register-confirm-password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Register</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dashboard screen -->
+            <section id="dashboard-section" class="screen">
+                <div class="dashboard-container">
+                    <div class="sidebar">
+                        <div class="user-profile">
+                            <div class="avatar">
+                                <!-- User initial or placeholder -->
+                                <span id="user-initial"></span>
+                            </div>
+                            <h3 id="user-name">User Name</h3>
+                        </div>
+                        <ul class="sidebar-menu">
+                            <li><a href="#calendar" class="active">My Calendar</a></li>
+                            <li><a href="#schedule">My Schedule</a></li>
+                            <li><a href="#friends">Friends</a></li>
+                            <li><a href="#groups">Groups</a></li>
+                            <li><a href="#settings">Settings</a></li>
+                        </ul>
+                    </div>
+                    <div class="main-content">
+                        <!-- Content will be dynamically loaded based on navigation -->
+                        <div id="content-area">
+                            <!-- Default content is the calendar view -->
+                            <div id="calendar-view" class="content-view active">
+                                <h2>My Calendar</h2>
+                                <div class="calendar-controls">
+                                    <button id="prev-week" class="btn">Previous Week</button>
+                                    <h3 id="current-week-display">May 15 - May 21, 2023</h3>
+                                    <button id="next-week" class="btn">Next Week</button>
+                                </div>
+                                <div class="calendar-container">
+                                    <!-- Calendar will be rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>© 2023 Friends Scheduler - Find time together</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/app.js" type="module"></script>
+</body>
+</html>
