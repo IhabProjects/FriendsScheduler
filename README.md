@@ -32,31 +32,61 @@ It's challenging to coordinate meetups when everyone has different academic or w
 ├── js/                 # JavaScript files
 │   ├── app.js          # Main application logic
 │   ├── auth.js         # Authentication logic
-│   ├── calendar.js     # Calendar visualization
 │   ├── schedule.js     # Schedule management
 │   ├── friends.js      # Friend connection logic
 │   ├── groups.js       # Group management
+│   ├── lib/            # Libraries and utilities
+│   │   ├── supabase.js # Supabase client
+│   │   ├── config.js   # Configuration
+│   │   └── migration.js# Data migration utilities
 │   └── ...
 └── assets/             # Images, icons, etc.
 ```
 
+## Supabase Integration
+
+This application now uses Supabase for data storage and authentication. Follow these steps to set up:
+
+1. Create a Supabase account at [supabase.com](https://supabase.com) if you don't have one
+2. Create a new project in Supabase
+3. Set up the required database tables using SQL:
+   - Run the SQL commands in the Supabase SQL Editor to create the tables
+   - Make sure all tables have proper relationships and constraints
+4. Configure Row Level Security (RLS) policies to control access to your data
+5. Get your Supabase URL and anon key from the project settings
+6. Update the configuration in `js/lib/config.js` with your Supabase details:
+
+```javascript
+// Supabase configuration
+export const SUPABASE_CONFIG = {
+    URL: 'YOUR_SUPABASE_URL',
+    ANON_KEY: 'YOUR_SUPABASE_ANON_KEY',
+};
+```
+
+## Migration from localStorage
+
+The application provides functionality to migrate existing user data from localStorage to Supabase. This happens automatically when a user logs in and has existing data in localStorage.
+
 ## Development
 
 1. Clone the repository
-2. Open `index.html` in your browser to start using the application
-3. No server-side dependencies required as this is a client-side only application
+2. Configure the Supabase integration as mentioned above
+3. Open `index.html` in your browser to start using the application
 
 ## Data Storage
 
-The application uses browser's localStorage for data persistence, including:
-- User profiles
-- Schedule data
+The application now uses Supabase for data storage, providing:
+- User authentication and management
+- Schedule data storage
 - Friend connections
 - Group configurations
+- Real-time notifications
 
 ## Future Improvements
 
 - Add export/import functionality for schedules
 - Implement recurring events
-- Add notifications for friend requests
+- Add email notifications for friend requests
 - Create meeting proposals with voting system
+- Add multi-device synchronization

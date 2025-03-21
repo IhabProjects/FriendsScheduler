@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #2e6930;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1c4b1d;
+        }
+        #output {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    <p>This page tests the connection to your Supabase instance.</p>
+
+    <button id="test-btn">Test Connection</button>
+    <div class="result">
+        <p>Result: <span id="result-status">Not tested yet</span></p>
+        <div id="output"></div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/lib/supabase.js';
+
+        const testBtn = document.getElementById('test-btn');
+        const resultStatus = document.getElementById('result-status');
+        const output = document.getElementById('output');
+
+        testBtn.addEventListener('click', async () => {
+            resultStatus.textContent = 'Testing...';
+            resultStatus.className = '';
+            output.textContent = '';
+
+            try {
+                // Test connection by fetching from a public table
+                const { data, error } = await supabase.from('profiles').select('*').limit(1);
+
+                if (error) {
+                    throw error;
+                }
+
+                resultStatus.textContent = 'Connection successful!';
+                resultStatus.className = 'success';
+                output.textContent = 'Supabase is connected successfully.\n\nData: ' + JSON.stringify(data, null, 2);
+
+                // Test authentication
+                const authTest = await supabase.auth.getSession();
+                output.textContent += '\n\nAuth test: ' + JSON.stringify(authTest, null, 2);
+
+            } catch (error) {
+                resultStatus.textContent = 'Connection failed!';
+                resultStatus.className = 'error';
+                output.textContent = 'Error connecting to Supabase:\n' + error.message;
+                console.error('Connection error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

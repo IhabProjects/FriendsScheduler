@@ -59,157 +59,155 @@ const App = (function() {
         }
     }
 
-    // Set up event listeners
+    // Setup event listeners
     function setupEventListeners() {
-        // Navigation event listeners
-        navLinks.forEach(link => {
-            link.addEventListener('click', handleNavigation);
-        });
-
+        // Navigation
         sidebarLinks.forEach(link => {
             link.addEventListener('click', handleNavigation);
         });
 
+        // Quick links in dashboard
+        document.querySelectorAll('.quick-link-btn').forEach(btn => {
+            btn.addEventListener('click', handleQuickLink);
+        });
+
         // Logout button
-        if (logoutButton) {
-            logoutButton.addEventListener('click', handleLogout);
-        }
+        logoutButton.addEventListener('click', handleLogout);
 
-        // Handle ESC key to close any open modals or dropdowns
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-active, .dropdown-active').forEach(el => {
-                    el.classList.remove('modal-active', 'dropdown-active');
-                });
-            }
-        });
-
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.dropdown-container') && !e.target.matches('.dropdown-toggle')) {
-                document.querySelectorAll('.dropdown-active').forEach(dropdown => {
-                    dropdown.classList.remove('dropdown-active');
-                });
-            }
-        });
+        // Listen for auth events
+        document.addEventListener('auth:login', handleLogin);
+        document.addEventListener('auth:register', handleRegister);
+        document.addEventListener('auth:logout', handleLogout);
     }
 
     // Handle navigation
     function handleNavigation(e) {
         e.preventDefault();
+
         const targetScreen = e.currentTarget.getAttribute('data-screen');
+        if (targetScreen) {
+            showScreen(targetScreen);
 
-        if (targetScreen && screenElements[targetScreen]) {
-            switchScreen(targetScreen);
-
-            // Update active states for navigation
-            navLinks.forEach(link => link.classList.remove('active'));
+            // Update active link
             sidebarLinks.forEach(link => link.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+        }
+    }
 
-            // Set active class
-            document.querySelectorAll(`[data-screen="${targetScreen}"]`).forEach(link => {
-                link.classList.add('active');
+    // Handle quick link clicks in dashboard
+    function handleQuickLink(e) {
+        const targetScreen = e.currentTarget.getAttribute('data-screen');
+        if (targetScreen) {
+            showScreen(targetScreen);
+
+            // Update active link in sidebar
+            sidebarLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-screen') === targetScreen) {
+                    link.classList.add('active');
+                }
             });
         }
     }
 
-    // Switch to a different screen
-    function switchScreen(screenName) {
-        if (currentUser === null && screenName !== 'auth') {
-            screenName = 'auth';
-        }
+    // Handle successful login
+    function handleLogin(e) {
+        const userData = e.detail;
+        currentUser = userData;
+        showUserDashboard();
+        showScreen('dashboard');
+    }
 
-        // Hide all screens
-        Object.values(screenElements).forEach(screen => {
-            if (screen) screen.classList.remove('active');
+    // Handle successful registration
+    function handleRegister(e) {
+        console.log('User registered:', e.detail);
+        // Registration already handles UI updates through auth:login event
+    }
+
+    // Handle logout
+    function handleLogout() {
+        Auth.logout().then(() => {
+            currentUser = null;
+            showAuthScreen();
         });
+    }
 
-        // Show requested screen with transition
-        if (screenElements[screenName]) {
-            screenElements[screenName].classList.add('active');
-            currentScreen = screenName;
+    // Show auth screen
+    function showAuthScreen() {
+        // Hide app container
+        document.getElementById('app-container').style.display = 'none';
 
-            // Trigger screen-specific init if needed
-            if (screenName === 'schedule') {
-                Schedule.refresh();
-            } else if (screenName === 'friends') {
-                Friends.refresh();
-            } else if (screenName === 'groups') {
-                Groups.refresh();
-            }
-        }
+        // Show auth screen
+        screenElements.auth.classList.add('active');
+
+        // Update current screen
+        currentScreen = 'auth';
+
+        // Hide header and footer
+        document.querySelector('header').style.display = 'none';
+        document.querySelector('footer').style.display = 'none';
     }
 
     // Show user dashboard
     function showUserDashboard() {
-        document.body.classList.add('authenticated');
-
-        // Update user display name
-        if (userDisplayName) {
-            userDisplayName.textContent = currentUser.fullName || currentUser.username;
+        // Update user display
+        if (userDisplayName && currentUser) {
+            userDisplayName.textContent = currentUser.username || currentUser.email;
         }
 
-        // Switch to dashboard screen
-        switchScreen('dashboard');
+        // Show app container
+        document.getElementById('app-container').style.display = 'flex';
 
-        // Set dashboard link as active
-        navLinks.forEach(link => link.classList.remove('active'));
-        sidebarLinks.forEach(link => link.classList.remove('active'));
+        // Hide auth screen
+        screenElements.auth.classList.remove('active');
 
-        document.querySelectorAll('[data-screen="dashboard"]').forEach(link => {
-            link.classList.add('active');
+        // Show header and footer
+        document.querySelector('header').style.display = 'flex';
+        document.querySelector('footer').style.display = 'block';
+
+        // Load dashboard data
+        Dashboard.loadData();
+    }
+
+    // Show a specific screen
+    function showScreen(screenName) {
+        // Hide all screens
+        Object.values(screenElements).forEach(screen => {
+            screen.classList.remove('active');
         });
-    }
 
-    // Show authentication screen
-    function showAuthScreen() {
-        document.body.classList.remove('authenticated');
-        switchScreen('auth');
-    }
+        // Show the target screen
+        if (screenElements[screenName]) {
+            screenElements[screenName].classList.add('active');
+            currentScreen = screenName;
 
-    // Handle user logout
-    function handleLogout() {
-        // Show confirmation dialog
-        const confirmLogout = confirm('Are you sure you want to log out?');
-
-        if (confirmLogout) {
-            currentUser = null;
-            localStorage.removeItem('currentUser');
-            showAuthScreen();
-
-            // Display logout notification
-            Notifications.showToast('You have been logged out successfully', 'info');
+            // Trigger screen-specific actions
+            switch (screenName) {
+                case 'dashboard':
+                    Dashboard.loadData();
+                    break;
+                case 'schedule':
+                    Schedule.refreshView();
+                    break;
+                case 'friends':
+                    Friends.refreshView();
+                    break;
+                case 'groups':
+                    Groups.refreshView();
+                    break;
+            }
         }
-    }
-
-    // Get current user
-    function getCurrentUser() {
-        return currentUser;
-    }
-
-    // Set current user
-    function setCurrentUser(user) {
-        currentUser = user;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        showUserDashboard();
-    }
-
-    // Get current screen
-    function getCurrentScreen() {
-        return currentScreen;
     }
 
     // Public API
     return {
         init,
-        getCurrentUser,
-        setCurrentUser,
-        getCurrentScreen,
-        switchScreen
+        showScreen,
+        getCurrentUser: () => currentUser
     };
 })();
 
-// Initialize the application when DOM is loaded
+// Initialize the app when DOM is ready
 document.addEventListener('DOMContentLoaded', App.init);
 
 // Add a loading indicator to the body

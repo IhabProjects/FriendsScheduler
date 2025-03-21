@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Setup Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .section {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .setup-steps {
+            margin-top: 20px;
+        }
+        .setup-step {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-left: 4px solid #2e6930;
+            background-color: #f0f0f0;
+        }
+        .step-status {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .pending {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+        .running {
+            background-color: #cff4fc;
+            color: #055160;
+        }
+        .success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+        .btn {
+            padding: 10px 15px;
+            background-color: #2e6930;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #1c4b1d;
+        }
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .sql-content {
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+            background-color: #2b2b2b;
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Supabase Setup Tool</h1>
+    <p>This tool helps you set up your Supabase database for the Friends Scheduler application.</p>
+
+    <div class="container">
+        <div class="section">
+            <h2>Connection Status</h2>
+            <div id="connection-status">Checking connection...</div>
+            <button id="test-connection-btn" class="btn">Test Connection</button>
+        </div>
+
+        <div class="section">
+            <h2>Database Setup</h2>
+            <p>Click the button below to run the SQL commands to set up your database tables and permissions.</p>
+            <div class="setup-steps">
+                <div class="setup-step" id="step-extensions">
+                    <h3>Step 1: Enable UUID extension</h3>
+                    <span class="step-status pending">Pending</span>
+                </div>
+                <div class="setup-step" id="step-profiles">
+                    <h3>Step 2: Create Profiles table</h3>
+                    <span class="step-status pending">Pending</span>
+                </div>
+                <div class="setup-step" id="step-schedules">
+                    <h3>Step 3: Create Schedules table</h3>
+                    <span class="step-status pending">Pending</span>
+                </div>
+                <div class="setup-step" id="step-friends">
+                    <h3>Step 4: Create Friends table</h3>
+                    <span class="step-status pending">Pending</span>
+                </div>
+                <div class="setup-step" id="step-groups">
+                    <h3>Step 5: Create Groups table</h3>
+                    <span class="step-status pending">Pending</span>
+                </div>
+                <div class="setup-step" id="step-group-members">
+                    <h3>Step 6: Create Group Members table</h3>
+                    <span class="step-status pending">Pending</span>
+                </div>
+                <div class="setup-step" id="step-notifications">
+                    <h3>Step 7: Create Notifications table</h3>
+                    <span class="step-status pending">Pending</span>
+                </div>
+                <div class="setup-step" id="step-rls">
+                    <h3>Step 8: Set up Row Level Security</h3>
+                    <span class="step-status pending">Pending</span>
+                </div>
+                <div class="setup-step" id="step-triggers">
+                    <h3>Step 9: Set up Triggers and Functions</h3>
+                    <span class="step-status pending">Pending</span>
+                </div>
+            </div>
+            <div style="margin-top: 20px;">
+                <button id="run-setup-btn" class="btn">Run All Setup Steps</button>
+                <button id="reset-setup-btn" class="btn">Reset Setup</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Manual SQL Execution</h2>
+            <p>You can also run individual SQL commands here:</p>
+            <textarea id="sql-command" placeholder="Enter SQL command..."></textarea>
+            <div style="margin-top: 10px;">
+                <button id="run-sql-btn" class="btn">Run SQL</button>
+                <button id="clear-sql-btn" class="btn">Clear</button>
+            </div>
+            <div class="log" id="sql-result">Results will appear here...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/lib/supabase.js';
+
+        // SQL commands for setup
+        const SQL_COMMANDS = {
+            extensions: `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`,
+
+            profiles: `CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username TEXT UNIQUE NOT NULL,
+  full_name TEXT,
+  avatar_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);`,
+
+            schedules: `CREATE TABLE IF NOT EXISTS public.schedules (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  title TEXT NOT NULL,
+  date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  type TEXT DEFAULT 'busy',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);`,
+
+            friends: `CREATE TABLE IF NOT EXISTS public.friends (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  friend_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT unique_friendship UNIQUE (user_id, friend_id),
+  CONSTRAINT not_self_friend CHECK (user_id <> friend_id)
+);`,
+
+            groups: `CREATE TABLE IF NOT EXISTS public.groups (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  description TEXT,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);`,
+
+            groupMembers: `CREATE TABLE IF NOT EXISTS public.group_members (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  group_id UUID REFERENCES public.groups(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT unique_group_member UNIQUE (group_id, user_id)
+);`,
+
+            notifications: `CREATE TABLE IF NOT EXISTS public.notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  type TEXT NOT NULL,
+  message TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT FALSE,
+  related_id UUID,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);`,
+
+            rls: `-- Enable RLS for all tables
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.schedules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.friends ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.group_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+-- Add policies for profiles
+CREATE POLICY "Public profiles are viewable by everyone." ON public.profiles FOR SELECT USING (true);
+CREATE POLICY "Users can insert their own profile." ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can update their own profile." ON public.profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Add policies for schedules
+CREATE POLICY "Users can view their own schedules" ON public.schedules FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own schedules" ON public.schedules FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own schedules" ON public.schedules FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own schedules" ON public.schedules FOR DELETE USING (auth.uid() = user_id);
+
+-- Add policies for friends
+CREATE POLICY "Users can view their friend connections" ON public.friends FOR SELECT USING (
+  auth.uid() = user_id OR auth.uid() = friend_id
+);
+CREATE POLICY "Users can create friend requests" ON public.friends FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their friend status" ON public.friends FOR UPDATE USING (
+  auth.uid() = user_id OR auth.uid() = friend_id
+);
+CREATE POLICY "Users can delete their friend connections" ON public.friends FOR DELETE USING (
+  auth.uid() = user_id OR auth.uid() = friend_id
+);
+
+-- Add policies for groups
+CREATE POLICY "Users can view groups they belong to" ON public.groups FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM public.group_members WHERE group_id = id AND user_id = auth.uid()
+  ) OR created_by = auth.uid()
+);
+CREATE POLICY "Users can create groups" ON public.groups FOR INSERT WITH CHECK (auth.uid() = created_by);
+CREATE POLICY "Group creators can update groups" ON public.groups FOR UPDATE USING (auth.uid() = created_by);
+CREATE POLICY "Group creators can delete groups" ON public.groups FOR DELETE USING (auth.uid() = created_by);
+
+-- Add policies for group_members
+CREATE POLICY "Users can view group members" ON public.group_members FOR SELECT USING (
+  user_id = auth.uid() OR
+  EXISTS (
+    SELECT 1 FROM public.groups WHERE id = group_id AND created_by = auth.uid()
+  )
+);
+CREATE POLICY "Group creators can manage members" ON public.group_members FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM public.groups WHERE id = group_id AND created_by = auth.uid()
+  ) OR auth.uid() = user_id
+);
+CREATE POLICY "Group creators can remove members" ON public.group_members FOR DELETE USING (
+  EXISTS (
+    SELECT 1 FROM public.groups WHERE id = group_id AND created_by = auth.uid()
+  ) OR auth.uid() = user_id
+);
+
+-- Add policies for notifications
+CREATE POLICY "Users can view their own notifications" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can mark their notifications as read" ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete their notifications" ON public.notifications FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "System can create notifications" ON public.notifications FOR INSERT WITH CHECK (true);`,
+
+            triggers: `-- Function to handle new user signups
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, username, full_name, avatar_url)
+  VALUES (
+    new.id,
+    COALESCE(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
+    COALESCE(new.raw_user_meta_data->>'full_name', ''),
+    COALESCE(new.raw_user_meta_data->>'avatar_url', '')
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to automatically create profile on signup
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Function to find available time slots for a group
+CREATE OR REPLACE FUNCTION public.find_available_time_slots(
+  group_id UUID,
+  start_date DATE,
+  end_date DATE
+) RETURNS TABLE (
+  date DATE,
+  start_time TIME,
+  end_time TIME
+) AS $$
+DECLARE
+  day_start TIME := '08:00:00'::TIME; -- Configurable
+  day_end TIME := '22:00:00'::TIME;   -- Configurable
+  slot_duration INTERVAL := '30 minutes'::INTERVAL; -- Configurable
+BEGIN
+  RETURN QUERY
+  WITH group_members AS (
+    SELECT user_id FROM public.group_members WHERE group_id = $1
+  ),
+  busy_times AS (
+    SELECT
+      s.date,
+      s.start_time,
+      s.end_time
+    FROM
+      public.schedules s
+    JOIN
+      group_members g ON s.user_id = g.user_id
+    WHERE
+      s.date BETWEEN $2 AND $3
+  ),
+  all_slots AS (
+    SELECT
+      d::DATE as date,
+      generate_series(
+        day_start::TIME,
+        day_end::TIME - slot_duration::INTERVAL,
+        slot_duration::INTERVAL
+      )::TIME as start_time,
+      (generate_series(
+        day_start::TIME,
+        day_end::TIME - slot_duration::INTERVAL,
+        slot_duration::INTERVAL
+      ) + slot_duration::INTERVAL)::TIME as end_time
+    FROM
+      generate_series($2, $3, '1 day'::INTERVAL) d
+  ),
+  available_slots AS (
+    SELECT
+      a.date,
+      a.start_time,
+      a.end_time
+    FROM
+      all_slots a
+    WHERE
+      NOT EXISTS (
+        SELECT 1
+        FROM busy_times b
+        WHERE
+          b.date = a.date AND
+          (
+            (b.start_time <= a.start_time AND b.end_time > a.start_time) OR
+            (b.start_time < a.end_time AND b.end_time >= a.end_time) OR
+            (b.start_time >= a.start_time AND b.end_time <= a.end_time)
+          )
+      )
+  ),
+  consolidated_slots AS (
+    SELECT
+      date,
+      start_time,
+      LEAD(start_time, 1, end_time) OVER (PARTITION BY date ORDER BY start_time) AS end_time,
+      CASE
+        WHEN LEAD(start_time, 1) OVER (PARTITION BY date ORDER BY start_time) = end_time
+        THEN 0
+        ELSE 1
+      END AS slot_break
+    FROM
+      available_slots
+  ),
+  grouped_slots AS (
+    SELECT
+      date,
+      start_time,
+      end_time,
+      SUM(slot_break) OVER (PARTITION BY date ORDER BY start_time) AS slot_group
+    FROM
+      consolidated_slots
+  )
+  SELECT
+    date,
+    MIN(start_time) AS start_time,
+    MAX(end_time) AS end_time
+  FROM
+    grouped_slots
+  GROUP BY
+    date, slot_group
+  ORDER BY
+    date, start_time;
+END;
+$$ LANGUAGE plpgsql;`
+        };
+
+        // DOM Elements
+        const connectionStatus = document.getElementById('connection-status');
+        const testConnectionBtn = document.getElementById('test-connection-btn');
+        const runSetupBtn = document.getElementById('run-setup-btn');
+        const resetSetupBtn = document.getElementById('reset-setup-btn');
+        const sqlCommandInput = document.getElementById('sql-command');
+        const runSqlBtn = document.getElementById('run-sql-btn');
+        const clearSqlBtn = document.getElementById('clear-sql-btn');
+        const sqlResult = document.getElementById('sql-result');
+
+        // Helper function to update step status
+        function updateStepStatus(stepId, status, message = '') {
+            const step = document.getElementById(stepId);
+            const statusEl = step.querySelector('.step-status');
+
+            statusEl.className = 'step-status ' + status;
+            statusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+
+            if (message) {
+                if (!step.querySelector('.step-message')) {
+                    const messageEl = document.createElement('div');
+                    messageEl.className = 'step-message';
+                    step.appendChild(messageEl);
+                }
+                step.querySelector('.step-message').textContent = message;
+            }
+        }
+
+        // Test connection to Supabase
+        async function testConnection() {
+            connectionStatus.innerHTML = '<span style="color: #055160;">Testing connection...</span>';
+
+            try {
+                const { data, error } = await supabase.from('profiles').select('*').limit(1);
+
+                if (error) {
+                    throw error;
+                }
+
+                connectionStatus.innerHTML = '<span style="color: #0f5132;">✅ Connected to Supabase!</span>';
+            } catch (error) {
+                console.error('Connection error:', error);
+                connectionStatus.innerHTML = `<span style="color: #842029;">❌ Connection failed: ${error.message || 'Unknown error'}</span>`;
+            }
+        }
+
+        // Run a SQL command
+        async function runSql(command, silent = false) {
+            if (!silent) {
+                sqlResult.textContent = 'Running SQL command...\n';
+            }
+
+            try {
+                // Use direct SQL query instead of custom RPC function
+                const { data, error } = await supabase.rpc('execute_sql', {
+                    query: command
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (!silent) {
+                    sqlResult.textContent += 'Command executed successfully!\n';
+                    if (data) {
+                        sqlResult.textContent += '\nResult:\n' + JSON.stringify(data, null, 2);
+                    }
+                }
+
+                return { success: true, data };
+            } catch (error) {
+                console.error('SQL error:', error);
+
+                if (!silent) {
+                    sqlResult.textContent += `Error executing command: ${error.message || 'Unknown error'}\n`;
+                }
+
+                return { success: false, error };
+            }
+        }
+
+        // Run setup steps
+        async function runSetup() {
+            // Disable run button
+            runSetupBtn.disabled = true;
+
+            // Reset all steps
+            document.querySelectorAll('.setup-step .step-status').forEach(el => {
+                el.className = 'step-status pending';
+                el.textContent = 'Pending';
+            });
+
+            // Step 1: Enable UUID extension
+            updateStepStatus('step-extensions', 'running');
+            const extensionsResult = await runSql(SQL_COMMANDS.extensions, true);
+            updateStepStatus('step-extensions', extensionsResult.success ? 'success' : 'error',
+                             extensionsResult.error ? extensionsResult.error.message : '');
+
+            // Step 2: Create Profiles table
+            updateStepStatus('step-profiles', 'running');
+            const profilesResult = await runSql(SQL_COMMANDS.profiles, true);
+            updateStepStatus('step-profiles', profilesResult.success ? 'success' : 'error',
+                             profilesResult.error ? profilesResult.error.message : '');
+
+            // Step 3: Create Schedules table
+            updateStepStatus('step-schedules', 'running');
+            const schedulesResult = await runSql(SQL_COMMANDS.schedules, true);
+            updateStepStatus('step-schedules', schedulesResult.success ? 'success' : 'error',
+                             schedulesResult.error ? schedulesResult.error.message : '');
+
+            // Step 4: Create Friends table
+            updateStepStatus('step-friends', 'running');
+            const friendsResult = await runSql(SQL_COMMANDS.friends, true);
+            updateStepStatus('step-friends', friendsResult.success ? 'success' : 'error',
+                             friendsResult.error ? friendsResult.error.message : '');
+
+            // Step 5: Create Groups table
+            updateStepStatus('step-groups', 'running');
+            const groupsResult = await runSql(SQL_COMMANDS.groups, true);
+            updateStepStatus('step-groups', groupsResult.success ? 'success' : 'error',
+                             groupsResult.error ? groupsResult.error.message : '');
+
+            // Step 6: Create Group Members table
+            updateStepStatus('step-group-members', 'running');
+            const groupMembersResult = await runSql(SQL_COMMANDS.groupMembers, true);
+            updateStepStatus('step-group-members', groupMembersResult.success ? 'success' : 'error',
+                             groupMembersResult.error ? groupMembersResult.error.message : '');
+
+            // Step 7: Create Notifications table
+            updateStepStatus('step-notifications', 'running');
+            const notificationsResult = await runSql(SQL_COMMANDS.notifications, true);
+            updateStepStatus('step-notifications', notificationsResult.success ? 'success' : 'error',
+                             notificationsResult.error ? notificationsResult.error.message : '');
+
+            // Step 8: Set up Row Level Security
+            updateStepStatus('step-rls', 'running');
+            const rlsResult = await runSql(SQL_COMMANDS.rls, true);
+            updateStepStatus('step-rls', rlsResult.success ? 'success' : 'error',
+                             rlsResult.error ? rlsResult.error.message : '');
+
+            // Step 9: Set up Triggers and Functions
+            updateStepStatus('step-triggers', 'running');
+            const triggersResult = await runSql(SQL_COMMANDS.triggers, true);
+            updateStepStatus('step-triggers', triggersResult.success ? 'success' : 'error',
+                             triggersResult.error ? triggersResult.error.message : '');
+
+            // Re-enable run button
+            runSetupBtn.disabled = false;
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            testConnection();
+
+            testConnectionBtn.addEventListener('click', testConnection);
+
+            // Show SQL for a specific step
+            document.querySelectorAll('.setup-step').forEach(step => {
+                const stepId = step.id.replace('step-', '');
+                if (SQL_COMMANDS[stepId]) {
+                    const header = step.querySelector('h3');
+                    const viewSqlBtn = document.createElement('button');
+                    viewSqlBtn.className = 'btn';
+                    viewSqlBtn.style.fontSize = '12px';
+                    viewSqlBtn.style.padding = '2px 5px';
+                    viewSqlBtn.style.marginLeft = '10px';
+                    viewSqlBtn.textContent = 'View SQL';
+
+                    viewSqlBtn.addEventListener('click', () => {
+                        // Toggle SQL content display
+                        let sqlContent = step.querySelector('.sql-content');
+                        if (sqlContent) {
+                            sqlContent.remove();
+                        } else {
+                            sqlContent = document.createElement('div');
+                            sqlContent.className = 'sql-content';
+                            sqlContent.textContent = SQL_COMMANDS[stepId];
+
+                            const copyBtn = document.createElement('button');
+                            copyBtn.className = 'btn';
+                            copyBtn.style.fontSize = '12px';
+                            copyBtn.style.padding = '2px 5px';
+                            copyBtn.style.marginTop = '5px';
+                            copyBtn.textContent = 'Copy to Clipboard';
+
+                            copyBtn.addEventListener('click', () => {
+                                navigator.clipboard.writeText(SQL_COMMANDS[stepId])
+                                    .then(() => {
+                                        copyBtn.textContent = 'Copied!';
+                                        setTimeout(() => {
+                                            copyBtn.textContent = 'Copy to Clipboard';
+                                        }, 2000);
+                                    });
+                            });
+
+                            sqlContent.appendChild(document.createElement('br'));
+                            sqlContent.appendChild(copyBtn);
+                            step.appendChild(sqlContent);
+                        }
+                    });
+
+                    header.appendChild(viewSqlBtn);
+                }
+            });
+
+            // Instructions for manual setup
+            const setupContainer = document.querySelector('.section:nth-child(2)');
+            const instructionsDiv = document.createElement('div');
+            instructionsDiv.className = 'manual-instructions';
+            instructionsDiv.innerHTML = `
+                <h3>How to Set Up Your Database Manually</h3>
+                <ol>
+                    <li>Go to your <a href="https://app.supabase.com" target="_blank">Supabase Dashboard</a></li>
+                    <li>Select your project</li>
+                    <li>Navigate to the SQL Editor (under "Database")</li>
+                    <li>For each step above:
+                        <ul>
+                            <li>Click "View SQL" to see the SQL commands</li>
+                            <li>Copy the SQL</li>
+                            <li>Paste it into the Supabase SQL Editor</li>
+                            <li>Click "Run" to execute the commands</li>
+                        </ul>
+                    </li>
+                    <li>Follow the steps in order from Step 1 to Step 9</li>
+                </ol>
+                <p>Note: The "Run All Setup Steps" button will not work as it requires a custom RPC function to be set up in Supabase. Please follow the manual steps above.</p>
+            `;
+
+            setupContainer.appendChild(instructionsDiv);
+
+            // Disable the run all button as it requires the RPC function
+            runSetupBtn.disabled = true;
+            runSetupBtn.title = "Manual setup required - see instructions below";
+
+            // SQL command execution
+            runSqlBtn.addEventListener('click', async () => {
+                const command = sqlCommandInput.value.trim();
+                if (!command) {
+                    sqlResult.textContent = 'Please enter a SQL command.';
+                    return;
+                }
+
+                sqlResult.textContent = 'To run SQL commands, please use the Supabase SQL Editor in your Supabase Dashboard.';
+            });
+
+            clearSqlBtn.addEventListener('click', () => {
+                sqlCommandInput.value = '';
+                sqlResult.textContent = 'Results will appear here...';
+            });
+        });
+    </script>
+</body>
+</html>

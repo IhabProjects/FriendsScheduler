@@ -46,8 +46,8 @@
                     <div id="login" class="auth-form active">
                         <h2>Welcome Back</h2>
                         <div class="form-group">
-                            <label for="login-username">Username</label>
-                            <input type="text" id="login-username" placeholder="Enter your username">
+                            <label for="login-username">Username or Email</label>
+                            <input type="text" id="login-username" placeholder="Enter your username or email">
                         </div>
                         <div class="form-group">
                             <label for="login-password">Password</label>
@@ -61,8 +61,12 @@
                     <div id="register" class="auth-form">
                         <h2>Create Account</h2>
                         <div class="form-group">
-                            <label for="register-fullname">Full Name</label>
-                            <input type="text" id="register-fullname" placeholder="Enter your full name">
+                            <label for="register-name">Full Name</label>
+                            <input type="text" id="register-name" placeholder="Enter your full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-email">Email</label>
+                            <input type="email" id="register-email" placeholder="Enter your email">
                         </div>
                         <div class="form-group">
                             <label for="register-username">Username</label>
@@ -73,12 +77,24 @@
                             <input type="password" id="register-password" placeholder="Create a password">
                         </div>
                         <div class="form-group">
-                            <label for="register-email">Email (optional)</label>
-                            <input type="email" id="register-email" placeholder="Enter your email">
+                            <label for="register-confirm-password">Confirm Password</label>
+                            <input type="password" id="register-confirm-password" placeholder="Confirm your password">
                         </div>
                         <button id="register-btn" class="btn btn-primary">
                             <i class="fas fa-user-plus"></i> Register
                         </button>
+                    </div>
+                </div>
+                <div class="auth-info">
+                    <div class="auth-info-content">
+                        <h2>Friends Scheduler</h2>
+                        <p>Easily manage your schedule and find common free time with friends.</p>
+                        <ul>
+                            <li><i class="fas fa-calendar-check"></i> Track your busy times</li>
+                            <li><i class="fas fa-user-friends"></i> Connect with friends</li>
+                            <li><i class="fas fa-users"></i> Create groups for activities</li>
+                            <li><i class="fas fa-clock"></i> Find common free time slots</li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -287,12 +303,13 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/auth.js"></script>
-    <script src="js/schedule.js"></script>
-    <script src="js/friends.js"></script>
-    <script src="js/groups.js"></script>
-    <script src="js/notifications.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/app.js"></script>
+    <script type="module" src="js/lib/supabase.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/schedule.js"></script>
+    <script type="module" src="js/friends.js"></script>
+    <script type="module" src="js/groups.js"></script>
+    <script type="module" src="js/notifications.js"></script>
+    <script type="module" src="js/dashboard.js"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
