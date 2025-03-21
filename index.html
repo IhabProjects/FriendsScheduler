@@ -4,117 +4,295 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Friends Scheduler</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/auth.css">
     <link rel="stylesheet" href="css/calendar.css">
+    <link rel="stylesheet" href="css/schedule.css">
     <link rel="stylesheet" href="css/friends.css">
     <link rel="stylesheet" href="css/notifications.css">
-    <!-- FontAwesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
-    <div class="app-container">
-        <header>
-            <div class="logo">
-                <h1>Friends Scheduler</h1>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <i class="fas fa-calendar-alt"></i>
+            <h1>Friends Scheduler</h1>
+        </div>
+        <nav>
+            <div class="notification-toggle" id="notification-toggle">
+                <i class="fas fa-bell"></i>
+                <span class="notification-counter" id="notification-counter">0</span>
+                <div class="notification-list" id="notification-list"></div>
             </div>
-            <nav id="main-nav">
-                <!-- Navigation will be dynamically populated based on auth status -->
-            </nav>
-        </header>
+            <button id="logout-btn" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </nav>
+    </header>
 
-        <main>
-            <!-- Authentication screens -->
-            <section id="auth-section" class="screen active">
-                <div class="auth-container">
-                    <div class="auth-form-container">
-                        <div class="tab-headers">
-                            <button class="tab-btn active" data-target="login-form">Login</button>
-                            <button class="tab-btn" data-target="register-form">Register</button>
+    <!-- Main content -->
+    <main>
+        <!-- Auth Screen -->
+        <div id="auth-screen" class="screen active">
+            <div class="auth-container">
+                <div class="auth-form-container">
+                    <div class="tab-headers">
+                        <button class="tab-btn active" data-tab="login">Login</button>
+                        <button class="tab-btn" data-tab="register">Register</button>
+                    </div>
+
+                    <div id="login" class="auth-form active">
+                        <h2>Welcome Back</h2>
+                        <div class="form-group">
+                            <label for="login-username">Username</label>
+                            <input type="text" id="login-username" placeholder="Enter your username">
                         </div>
+                        <div class="form-group">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" placeholder="Enter your password">
+                        </div>
+                        <button id="login-btn" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                    </div>
 
-                        <form id="login-form" class="auth-form active">
-                            <div class="form-group">
-                                <label for="login-email">Email</label>
-                                <input type="email" id="login-email" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="login-password">Password</label>
-                                <input type="password" id="login-password" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Login</button>
-                        </form>
-
-                        <form id="register-form" class="auth-form">
-                            <div class="form-group">
-                                <label for="register-name">Full Name</label>
-                                <input type="text" id="register-name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="register-email">Email</label>
-                                <input type="email" id="register-email" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="register-password">Password</label>
-                                <input type="password" id="register-password" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="register-confirm-password">Confirm Password</label>
-                                <input type="password" id="register-confirm-password" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Register</button>
-                        </form>
+                    <div id="register" class="auth-form">
+                        <h2>Create Account</h2>
+                        <div class="form-group">
+                            <label for="register-fullname">Full Name</label>
+                            <input type="text" id="register-fullname" placeholder="Enter your full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-username">Username</label>
+                            <input type="text" id="register-username" placeholder="Choose a username">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password">Password</label>
+                            <input type="password" id="register-password" placeholder="Create a password">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-email">Email (optional)</label>
+                            <input type="email" id="register-email" placeholder="Enter your email">
+                        </div>
+                        <button id="register-btn" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Register
+                        </button>
                     </div>
                 </div>
-            </section>
+            </div>
+        </div>
 
-            <!-- Dashboard screen -->
-            <section id="dashboard-section" class="screen">
+        <!-- Main Application Screens -->
+        <div id="app-container" class="app-container">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <span id="user-display-name"></span>
+                    </div>
+                </div>
+                <nav class="sidebar-menu">
+                    <a href="#" data-screen="dashboard" class="active">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" data-screen="schedule">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Schedule</span>
+                    </a>
+                    <a href="#" data-screen="friends">
+                        <i class="fas fa-user-friends"></i>
+                        <span>Friends</span>
+                    </a>
+                    <a href="#" data-screen="groups">
+                        <i class="fas fa-users"></i>
+                        <span>Groups</span>
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- Dashboard Screen -->
+            <div id="dashboard-screen" class="screen main-content">
+                <div class="welcome-section">
+                    <h2>Welcome to Friends Scheduler</h2>
+                    <p>Easily manage your schedule, connect with friends, and find common free time for activities.</p>
+
+                    <div class="quick-links">
+                        <button class="quick-link-btn" data-screen="schedule">
+                            <i class="fas fa-plus-circle"></i> Add Event
+                        </button>
+                        <button class="quick-link-btn" data-screen="friends">
+                            <i class="fas fa-user-plus"></i> Add Friend
+                        </button>
+                        <button class="quick-link-btn" data-screen="groups">
+                            <i class="fas fa-users"></i> Manage Groups
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dashboard-stats">
+                    <!-- Stats will be populated by JS -->
+                </div>
+
                 <div class="dashboard-container">
-                    <div class="sidebar">
-                        <div class="user-profile">
-                            <div class="avatar">
-                                <!-- User initial or placeholder -->
-                                <span id="user-initial"></span>
-                            </div>
-                            <h3 id="user-name">User Name</h3>
+                    <div class="dashboard-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-calendar-day"></i> Upcoming Events</h3>
                         </div>
-                        <ul class="sidebar-menu">
-                            <li><a href="#calendar" class="active">My Calendar</a></li>
-                            <li><a href="#schedule">My Schedule</a></li>
-                            <li><a href="#friends">Friends</a></li>
-                            <li><a href="#groups">Groups</a></li>
-                            <li><a href="#settings">Settings</a></li>
-                        </ul>
+                        <div class="section-content upcoming-events">
+                            <!-- Events will be populated by JS -->
+                        </div>
                     </div>
-                    <div class="main-content">
-                        <!-- Content will be dynamically loaded based on navigation -->
-                        <div id="content-area">
-                            <!-- Default content is the calendar view -->
-                            <div id="calendar-view" class="content-view active">
-                                <h2>My Calendar</h2>
-                                <div class="calendar-controls">
-                                    <button id="prev-week" class="btn">Previous Week</button>
-                                    <h3 id="current-week-display">May 15 - May 21, 2023</h3>
-                                    <button id="next-week" class="btn">Next Week</button>
-                                </div>
-                                <div class="calendar-container">
-                                    <!-- Calendar will be rendered here -->
-                                </div>
-                            </div>
+
+                    <div class="dashboard-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-user-plus"></i> Friend Requests</h3>
+                        </div>
+                        <div class="section-content pending-requests">
+                            <!-- Requests will be populated by JS -->
                         </div>
                     </div>
                 </div>
-            </section>
-        </main>
+            </div>
 
-        <footer>
-            <p>© 2023 Friends Scheduler - Find time together</p>
-        </footer>
+            <!-- Schedule Screen -->
+            <div id="schedule-screen" class="screen main-content">
+                <h2>My Schedule</h2>
+
+                <div class="form-container">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="event-title">Event Title</label>
+                            <input type="text" id="event-title" placeholder="Enter event title">
+                        </div>
+                        <div class="form-group">
+                            <label for="event-date">Date</label>
+                            <input type="date" id="event-date">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="event-start">Start Time</label>
+                            <input type="time" id="event-start">
+                        </div>
+                        <div class="form-group">
+                            <label for="event-end">End Time</label>
+                            <input type="time" id="event-end">
+                        </div>
+                        <div class="form-group">
+                            <label for="event-type">Event Type</label>
+                            <select id="event-type">
+                                <option value="personal">Personal</option>
+                                <option value="class">Class</option>
+                                <option value="study">Study</option>
+                                <option value="group">Group</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button id="add-event-btn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Event
+                        </button>
+                    </div>
+                </div>
+
+                <div class="calendar-controls">
+                    <button id="prev-week-btn" class="btn btn-outline">
+                        <i class="fas fa-chevron-left"></i> Previous Week
+                    </button>
+                    <h3 id="current-week-display">Week of May 15, 2023</h3>
+                    <button id="next-week-btn" class="btn btn-outline">
+                        Next Week <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="calendar-container" id="calendar-container">
+                    <!-- Calendar will be populated by JS -->
+                </div>
+
+                <div class="event-list" id="event-list">
+                    <!-- Events will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Friends Screen -->
+            <div id="friends-screen" class="screen main-content">
+                <h2>Friends</h2>
+
+                <div class="friends-container">
+                    <div class="search-container">
+                        <input type="text" id="friend-search" placeholder="Search for users...">
+                        <button id="search-btn" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        <div id="search-results" class="search-results"></div>
+                    </div>
+
+                    <div class="friend-requests-container">
+                        <h3><i class="fas fa-user-plus"></i> Friend Requests</h3>
+                        <div id="friend-requests" class="friend-requests"></div>
+                    </div>
+
+                    <div class="friends-list-container">
+                        <h3><i class="fas fa-user-friends"></i> My Friends</h3>
+                        <div id="friends-list" class="friend-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Groups Screen -->
+            <div id="groups-screen" class="screen main-content">
+                <h2>Groups</h2>
+
+                <div class="groups-container">
+                    <div class="create-group-container">
+                        <h3><i class="fas fa-plus-circle"></i> Create New Group</h3>
+                        <div class="form-group">
+                            <label for="group-name">Group Name</label>
+                            <input type="text" id="group-name" placeholder="Enter group name">
+                        </div>
+                        <div class="form-group">
+                            <label for="group-description">Description (optional)</label>
+                            <textarea id="group-description" placeholder="Enter group description"></textarea>
+                        </div>
+                        <button id="create-group-btn" class="btn btn-primary">
+                            <i class="fas fa-users"></i> Create Group
+                        </button>
+                    </div>
+
+                    <div class="group-list-container">
+                        <h3><i class="fas fa-users"></i> My Groups</h3>
+                        <div id="groups-list" class="groups-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2023 Friends Scheduler. All rights reserved.</p>
+    </footer>
+
+    <!-- Notification templates -->
+    <div id="notification-templates" style="display: none;">
+        <div class="notification-alert" id="notification-alert-template">
+            <div class="notification-content"></div>
+            <button class="notification-close">&times;</button>
+        </div>
     </div>
 
     <!-- Scripts -->
-    <script src="js/app.js" type="module"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/schedule.js"></script>
+    <script src="js/friends.js"></script>
+    <script src="js/groups.js"></script>
     <script src="js/notifications.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>

@@ -1,193 +1,221 @@
-// Import modules
-import { initAuth, isAuthenticated, getCurrentUser } from './auth.js';
-import { initCalendar } from './calendar.js';
-import { initFriends } from './friends.js';
-import { initGroups } from './groups.js';
-import { initSchedule } from './schedule.js';
+/**
+ * Main application module for the Friends Scheduler
+ */
+const App = (function() {
+    // Cache DOM elements
+    const screenElements = {
+        auth: document.getElementById('auth-screen'),
+        dashboard: document.getElementById('dashboard-screen'),
+        schedule: document.getElementById('schedule-screen'),
+        friends: document.getElementById('friends-screen'),
+        groups: document.getElementById('groups-screen')
+    };
 
-// DOM Elements
-const authSection = document.getElementById('auth-section');
-const dashboardSection = document.getElementById('dashboard-section');
-const mainNav = document.getElementById('main-nav');
-const userInitial = document.getElementById('user-initial');
-const userName = document.getElementById('user-name');
+    const navLinks = document.querySelectorAll('nav a');
+    const sidebarLinks = document.querySelectorAll('.sidebar-menu a');
+    const logoutButton = document.getElementById('logout-btn');
+    const userDisplayName = document.getElementById('user-display-name');
 
-// Initialize the application
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize modules
-    initAuth();
+    // State
+    let currentUser = null;
+    let currentScreen = 'auth';
 
-    // Check authentication status and set up the UI accordingly
-    updateAuthUI();
+    // Initialize the application
+    function init() {
+        console.log('Initializing Friends Scheduler app...');
 
-    // Set up navigation
-    setupNavigation();
-});
+        // Check if user is logged in
+        checkAuthState();
 
-// Function to update UI based on authentication status
-function updateAuthUI() {
-    if (isAuthenticated()) {
-        // Hide auth section and show dashboard
-        authSection.classList.remove('active');
-        dashboardSection.classList.add('active');
+        // Initialize modules
+        Auth.init();
+        Schedule.init();
+        Friends.init();
+        Groups.init();
+        Notifications.init();
 
-        // Update user profile in sidebar
-        const user = getCurrentUser();
-        userInitial.textContent = user.name.charAt(0);
-        userName.textContent = user.name;
+        // Set up event listeners
+        setupEventListeners();
 
-        // Initialize other modules that require authentication
-        initCalendar();
-        initFriends();
-        initGroups();
-        initSchedule();
+        // Add a loading animation to the body while assets are loading
+        document.body.classList.add('loading');
 
-        // Initialize notifications after authentication (make sure it's available)
-        if (typeof Notifications !== 'undefined') {
-            // Add a welcome back notification
-            Notifications.addNotification(
-                `Welcome back, ${user.name}!`,
-                'general'
-            );
-
-            // Example: Add a simulated friend request notification after 5 seconds
+        // Remove loading class when window is fully loaded
+        window.addEventListener('load', () => {
             setTimeout(() => {
-                if (isAuthenticated()) {
-                    Notifications.addNotification(
-                        'You have a new friend request from Jane Smith',
-                        'friend-request',
-                        { userId: 'jane123' }
-                    );
-                }
-            }, 5000);
+                document.body.classList.remove('loading');
+            }, 500);
+        });
+    }
+
+    // Check if user is already logged in
+    function checkAuthState() {
+        const user = localStorage.getItem('currentUser');
+        if (user) {
+            currentUser = JSON.parse(user);
+            showUserDashboard();
+        } else {
+            showAuthScreen();
+        }
+    }
+
+    // Set up event listeners
+    function setupEventListeners() {
+        // Navigation event listeners
+        navLinks.forEach(link => {
+            link.addEventListener('click', handleNavigation);
+        });
+
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', handleNavigation);
+        });
+
+        // Logout button
+        if (logoutButton) {
+            logoutButton.addEventListener('click', handleLogout);
         }
 
-        // Update navigation
-        updateNavigation();
-    } else {
-        // Hide dashboard and show auth section
-        dashboardSection.classList.remove('active');
-        authSection.classList.add('active');
-
-        // Clear main navigation
-        mainNav.innerHTML = '';
-    }
-}
-
-// Set up navigation
-function setupNavigation() {
-    // Sidebar navigation
-    const sidebarLinks = document.querySelectorAll('.sidebar-menu a');
-    sidebarLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const target = link.getAttribute('href').substring(1); // Remove the #
-
-            // Remove active class from all links
-            sidebarLinks.forEach(l => l.classList.remove('active'));
-
-            // Add active class to clicked link
-            link.classList.add('active');
-
-            // Hide all content views
-            document.querySelectorAll('.content-view').forEach(view => {
-                view.classList.remove('active');
-            });
-
-            // Show the targeted content view
-            const targetView = document.getElementById(`${target}-view`);
-            if (targetView) {
-                targetView.classList.add('active');
+        // Handle ESC key to close any open modals or dropdowns
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-active, .dropdown-active').forEach(el => {
+                    el.classList.remove('modal-active', 'dropdown-active');
+                });
             }
         });
-    });
 
-    // Auth tabs
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    tabButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.getAttribute('data-target');
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown-container') && !e.target.matches('.dropdown-toggle')) {
+                document.querySelectorAll('.dropdown-active').forEach(dropdown => {
+                    dropdown.classList.remove('dropdown-active');
+                });
+            }
+        });
+    }
 
-            // Remove active class from all buttons and forms
-            tabButtons.forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.auth-form').forEach(form => {
-                form.classList.remove('active');
+    // Handle navigation
+    function handleNavigation(e) {
+        e.preventDefault();
+        const targetScreen = e.currentTarget.getAttribute('data-screen');
+
+        if (targetScreen && screenElements[targetScreen]) {
+            switchScreen(targetScreen);
+
+            // Update active states for navigation
+            navLinks.forEach(link => link.classList.remove('active'));
+            sidebarLinks.forEach(link => link.classList.remove('active'));
+
+            // Set active class
+            document.querySelectorAll(`[data-screen="${targetScreen}"]`).forEach(link => {
+                link.classList.add('active');
             });
+        }
+    }
 
-            // Add active class to clicked button and target form
-            btn.classList.add('active');
-            document.getElementById(target).classList.add('active');
+    // Switch to a different screen
+    function switchScreen(screenName) {
+        if (currentUser === null && screenName !== 'auth') {
+            screenName = 'auth';
+        }
+
+        // Hide all screens
+        Object.values(screenElements).forEach(screen => {
+            if (screen) screen.classList.remove('active');
         });
-    });
-}
 
-// Update main navigation based on auth status
-function updateNavigation() {
-    if (isAuthenticated()) {
-        mainNav.innerHTML = `
-            <a href="#" class="logout-btn">Logout</a>
-        `;
+        // Show requested screen with transition
+        if (screenElements[screenName]) {
+            screenElements[screenName].classList.add('active');
+            currentScreen = screenName;
 
-        // Add logout functionality
-        document.querySelector('.logout-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            logout();
+            // Trigger screen-specific init if needed
+            if (screenName === 'schedule') {
+                Schedule.refresh();
+            } else if (screenName === 'friends') {
+                Friends.refresh();
+            } else if (screenName === 'groups') {
+                Groups.refresh();
+            }
+        }
+    }
+
+    // Show user dashboard
+    function showUserDashboard() {
+        document.body.classList.add('authenticated');
+
+        // Update user display name
+        if (userDisplayName) {
+            userDisplayName.textContent = currentUser.fullName || currentUser.username;
+        }
+
+        // Switch to dashboard screen
+        switchScreen('dashboard');
+
+        // Set dashboard link as active
+        navLinks.forEach(link => link.classList.remove('active'));
+        sidebarLinks.forEach(link => link.classList.remove('active'));
+
+        document.querySelectorAll('[data-screen="dashboard"]').forEach(link => {
+            link.classList.add('active');
         });
     }
-}
 
-// Logout function
-function logout() {
-    // Add a notification about logging out if Notifications module is loaded
-    if (typeof Notifications !== 'undefined') {
-        // This notification will show briefly before logout completes
-        Notifications.addNotification(
-            'You have been logged out successfully',
-            'general'
-        );
+    // Show authentication screen
+    function showAuthScreen() {
+        document.body.classList.remove('authenticated');
+        switchScreen('auth');
     }
 
-    // Clear user data from localStorage
-    localStorage.removeItem('user');
-    localStorage.removeItem('friends');
-    localStorage.removeItem('groups');
-    localStorage.removeItem('schedule');
-    localStorage.removeItem('friendScheduler_notifications');
+    // Handle user logout
+    function handleLogout() {
+        // Show confirmation dialog
+        const confirmLogout = confirm('Are you sure you want to log out?');
 
-    // Update UI
-    updateAuthUI();
-}
+        if (confirmLogout) {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showAuthScreen();
 
-// Function to create a test notification (for demonstration)
-function createTestNotification(type) {
-    if (typeof Notifications === 'undefined') return;
-
-    let message, actionData;
-
-    switch(type) {
-        case 'friend-request':
-            message = 'New friend request from John Doe';
-            actionData = { userId: 'user123' };
-            break;
-        case 'schedule-update':
-            message = 'Alex updated their schedule for next week';
-            actionData = { eventId: 'event789' };
-            break;
-        case 'reminder':
-            message = 'Reminder: Study group tomorrow at 3 PM';
-            actionData = { date: new Date(Date.now() + 86400000).toISOString() };
-            break;
-        case 'group':
-            message = 'You were added to "Computer Science Study Group"';
-            actionData = { groupId: 'group456' };
-            break;
-        default:
-            message = 'New notification';
-            actionData = null;
+            // Display logout notification
+            Notifications.showToast('You have been logged out successfully', 'info');
+        }
     }
 
-    return Notifications.addNotification(message, type, actionData);
-}
+    // Get current user
+    function getCurrentUser() {
+        return currentUser;
+    }
 
-// Export functions for use in other modules
-export { updateAuthUI, createTestNotification };
+    // Set current user
+    function setCurrentUser(user) {
+        currentUser = user;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        showUserDashboard();
+    }
+
+    // Get current screen
+    function getCurrentScreen() {
+        return currentScreen;
+    }
+
+    // Public API
+    return {
+        init,
+        getCurrentUser,
+        setCurrentUser,
+        getCurrentScreen,
+        switchScreen
+    };
+})();
+
+// Initialize the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', App.init);
+
+// Add a loading indicator to the body
+document.body.innerHTML += `
+<div class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Loading Friends Scheduler...</p>
+</div>
+`;
